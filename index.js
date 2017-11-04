@@ -36,6 +36,7 @@ class Registry extends Array {
 
       toProc.send({
         "type": "broadcast",
+        "toProcessId": toProc.pid,
         "fromProcessId": fromProc.pid,
         "data": data
       });
@@ -56,8 +57,9 @@ class Registry extends Array {
 
     toProc.send({
       "type": "unicast",
+      "toProcessId": toProcessId,
       "fromProcessId": fromProc.pid,
-      "data": msg.data
+      "data": data
     });
 
   }
