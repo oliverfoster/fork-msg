@@ -25,14 +25,13 @@ class Registry extends Array {
 
   broadcast(fromProcessId, data) {
 
+    var isSingleRoute = (process.pid === fromProcessId);
     var fromProc = this.find(fromProcessId) || { pid: null };
 
     for (var i = 0, l = this.length; i < l; i++) {
 
       var toProc = this[i];
-      if (toProc.pid === fromProc.pid) continue;
-
-      console.log("broadcasting from", fromProc.pid, "to", toProc.pid);
+      if (!isSingleRoute && toProc.pid === fromProc.pid) continue;
 
       toProc.send({
         "type": "broadcast",
@@ -53,8 +52,6 @@ class Registry extends Array {
     if (!fromProc) return;
     if (!toProc) return;
 
-    console.log("unicasting from", fromProc.pid, "to", toProc.pid);
-
     toProc.send({
       "type": "unicast",
       "toProcessId": toProcessId,
@@ -69,8 +66,6 @@ class Registry extends Array {
     var toProc = this.find(toProcessId) || { pid: null };
 
     if (!toProc) return;
-
-    console.log("registered to", toProc.pid);
 
     toProc.send({
       "type": "registered",
