@@ -146,11 +146,11 @@ class ForkMsg extends EventEmitter {
   }
 
   broadcast(data) {
-    registry.broadcast(this.proc.id, data);
+    registry.broadcast(this.proc.pid, data);
   }
 
   unicast(toProcessId, data) {
-    registry.unicast(this.proc.id, toProcessId, data);
+    registry.unicast(this.proc.pid, toProcessId, data);
   }
 
 }
