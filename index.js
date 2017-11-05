@@ -46,8 +46,9 @@ class Registry extends Array {
 
   unicast(fromProcessId, toProcessId, data) {
 
+
     var isSingleRoute = (process.pid === fromProcessId);
-    
+
     var fromProc = this.find(fromProcessId) || { pid: null };
     if (!fromProc) return;
     if (isSingleRoute) {
@@ -166,12 +167,15 @@ class ForkMsg extends EventEmitter {
 
           var value = then.data;
           if (then.data instanceof Function) {
-            value = then.data(msg.data);
+            value = then.data(msg.data, msg);
           }
 
           switch (then.type) {
             case "reply":
               msg.reply(value);
+              break;
+            case "broadcast":
+              msg.broadcast(value);
               break;
           }
 
@@ -191,12 +195,15 @@ class ForkMsg extends EventEmitter {
 
           var value = then.data;
           if (then.data instanceof Function) {
-            value = then.data(msg.data);
+            value = then.data(msg.data, msg);
           }
 
           switch (then.type) {
             case "reply":
               msg.reply(value);
+              break;
+            case "broadcast":
+              msg.broadcast(value);
               break;
           }
 
@@ -210,12 +217,12 @@ class ForkMsg extends EventEmitter {
   }
 
   broadcast(data) {
-    registry.broadcast(this.proc.id, data);
+    registry.broadcast(this.proc.pid, data);
     return this;
   }
 
   unicast(toProcessId, data) {
-    registry.unicast(this.proc.id, toProcessId, data);
+    registry.unicast(this.proc.pid, toProcessId, data);
     return this;
   }
 
@@ -248,6 +255,15 @@ class ForkMsg extends EventEmitter {
     if (!this.currentOn) return this;
     this.currentOn.then.push({
       type: "reply",
+      data
+    });
+    return this;
+  }
+
+  thenBroadcast(data) {
+    if (!this.currentOn) return this;
+    this.currentOn.then.push({
+      type: "broadcast",
       data
     });
     return this;
