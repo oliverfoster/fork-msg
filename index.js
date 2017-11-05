@@ -143,14 +143,122 @@ class ForkMsg extends EventEmitter {
   constructor(proc) {
     super()
     this.proc = proc;
+    
+    this.onRegistereds = [];
+    this.onBroadcasts = [];
+    this.onUnicasts = [];
+    this.currentOn = null;
+    
+    this.on("registered", function() {
+      this.onRegistereds.forEach((then)=>{
+        if (then instanceof Function) then();
+      });
+    });
+
+    this.on("broadcast", function(msg) {
+
+      this.onBroadcasts.forEach((item)=>{
+
+        var when = _.result(item, "when");
+        if (!_.isMatch(msg.data, when)) return;
+
+        item.then.forEach((then)=>{
+
+          var value = then.data;
+          if (then.data instanceof Function) {
+            value = then.data(msg.data);
+          }
+
+          switch (then.type) {
+            case "reply":
+              msg.reply(value);
+              break;
+          }
+
+        });
+
+      });
+
+    });
+    this.on("unicast", function(msg) {
+
+      this.onUnicasts.forEach((item)=>{
+
+        var when = _.result(item, "when");
+        if (!_.isMatch(msg.data, when)) return;
+
+        item.then.forEach((then)=>{
+
+          var value = then.data;
+          if (then.data instanceof Function) {
+            value = then.data(msg.data);
+          }
+
+          switch (then.type) {
+            case "reply":
+              msg.reply(value);
+              break;
+          }
+
+        });
+
+      });
+
+    });
+
+
   }
 
   broadcast(data) {
-    registry.broadcast(this.proc.pid, data);
+    registry.broadcast(this.proc.id, data);
+    return this;
   }
 
   unicast(toProcessId, data) {
-    registry.unicast(this.proc.pid, toProcessId, data);
+    registry.unicast(this.proc.id, toProcessId, data);
+    return this;
+  }
+
+  onRegistered(then) {
+    this.onRegistereds.push(then);
+    return this;
+  }
+
+  onBroadcast(when) {
+    var item = {
+      when,
+      then: []
+    };
+    this.onBroadcasts.push(item);
+    this.currentOn = item;
+    return this;
+  }
+
+  onUnicast(when) {
+    var item = {
+      when,
+      then: []
+    };
+    this.onUnicasts.push(item);
+    this.currentOn = item;
+    return this;
+  }
+
+  thenReply(data) {
+    if (!this.currentOn) return this;
+    this.currentOn.then.push({
+      type: "reply",
+      data
+    });
+    return this;
+  }
+
+  then(data) {
+    if (!this.currentOn) return this;
+    this.currentOn.then.push({
+      data
+    }); 
+    return this;
   }
 
 }
