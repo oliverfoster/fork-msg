@@ -14,7 +14,7 @@ class Registry extends Array {
       "type": "register",
       "fromProcessId": proc.pid
     });
-    this.identify();
+    if (!this.find(process.pid)) this.identify();
   }
 
   identify() {
@@ -45,11 +45,24 @@ class Registry extends Array {
   }
 
   unicast(fromProcessId, toProcessId, data) {
+
+    var isSingleRoute = (process.pid === fromProcessId);
     
     var fromProc = this.find(fromProcessId) || { pid: null };
-    var toProc = this.find(toProcessId);
-
     if (!fromProc) return;
+    if (isSingleRoute) {
+
+      fromProc.send({
+        "type": "unicast",
+        "toProcessId": toProcessId,
+        "fromProcessId": fromProc.pid,
+        "data": data
+      });
+
+      return;
+    }
+
+    var toProc = this.find(toProcessId);
     if (!toProc) return;
 
     toProc.send({
@@ -85,7 +98,6 @@ class Registry extends Array {
   }
 
   unregister(proc) {
-    //console.log(proc.pid, "unregistering");
     for (var i = 0, l = this.length; i < l; i++) {
       var item = this[i];
       if (item.pid === proc.pid) {
@@ -152,7 +164,7 @@ module.exports = function(proc) {
 
   var emitter = new ForkMsg(proc);
   proc.on("message", function(msg) {
-    msg.fromProcessId = proc.pid;
+    //msg.fromProcessId = proc.pid;
     emitter.emit(msg.type, new Msg(proc, msg));
   });
 
