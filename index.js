@@ -160,24 +160,35 @@ class ForkMsg extends EventEmitter {
 
       this.onBroadcasts.forEach((item)=>{
 
-        var when = _.result(item, "when");
-        if (!_.isMatch(msg.data, when)) return;
+        var whens = _.result(item, "when");
+        if (!(whens instanceof Array)) whens = [whens];
+
+        var isMatch = false;
+        for (var i = 0, l = whens.length; i < l; i++) {
+          var when = whens[i];
+          isMatch = isMatch || _.isMatch(msg.data, when);
+          if (isMatch) break;
+        }
+        if (!isMatch) return;
 
         item.then.forEach((then)=>{
 
-          var value = then.data;
+          var values = then.data;
           if (then.data instanceof Function) {
-            value = then.data(msg.data, msg);
+            values = then.data(msg.data, msg);
           }
+          if (!(values instanceof Array)) values = [values];
 
-          switch (then.type) {
-            case "reply":
-              msg.reply(value);
-              break;
-            case "broadcast":
-              msg.broadcast(value);
-              break;
-          }
+          values.forEach((value)=>{
+            switch (then.type) {
+              case "reply":
+                msg.reply(value);
+                break;
+              case "broadcast":
+                msg.broadcast(value);
+                break;
+            }
+          });
 
         });
 
@@ -188,24 +199,35 @@ class ForkMsg extends EventEmitter {
 
       this.onUnicasts.forEach((item)=>{
 
-        var when = _.result(item, "when");
-        if (!_.isMatch(msg.data, when)) return;
+        var whens = _.result(item, "when");
+        if (!(whens instanceof Array)) whens = [whens];
+
+        var isMatch = false;
+        for (var i = 0, l = whens.length; i < l; i++) {
+          var when = whens[i];
+          isMatch = isMatch || _.isMatch(msg.data, when);
+          if (isMatch) break;
+        }
+        if (!isMatch) return;
 
         item.then.forEach((then)=>{
 
-          var value = then.data;
+          var values = then.data;
           if (then.data instanceof Function) {
-            value = then.data(msg.data, msg);
+            values = then.data(msg.data, msg);
           }
+          if (!(values instanceof Array)) values = [values];
 
-          switch (then.type) {
-            case "reply":
-              msg.reply(value);
-              break;
-            case "broadcast":
-              msg.broadcast(value);
-              break;
-          }
+          values.forEach((value)=>{
+            switch (then.type) {
+              case "reply":
+                msg.reply(value);
+                break;
+              case "broadcast":
+                msg.broadcast(value);
+                break;
+            }
+          });
 
         });
 
@@ -273,7 +295,7 @@ class ForkMsg extends EventEmitter {
     if (!this.currentOn) return this;
     this.currentOn.then.push({
       data
-    }); 
+    });
     return this;
   }
 
