@@ -151,7 +151,7 @@ class ForkMsg extends EventEmitter {
     this.onUnicasts = [];
     this.currentOn = null;
 
-    this,proc.on("message", (msg)=>{
+    this.proc.on("message", (msg)=>{
       //msg.fromProcessId = proc.pid;
       this.emit(msg.type, new Msg(this.proc, msg));
     });
