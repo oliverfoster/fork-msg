@@ -153,7 +153,7 @@ class ForkMsg extends EventEmitter {
 
     this,proc.on("message", (msg)=>{
       //msg.fromProcessId = proc.pid;
-      emitter.emit(msg.type, new Msg(this.proc, msg));
+      this.emit(msg.type, new Msg(this.proc, msg));
     });
 
     this.on("register", (msg)=>{
