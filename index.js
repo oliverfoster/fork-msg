@@ -145,19 +145,26 @@ class ForkMsg extends EventEmitter {
     super()
     this.proc = proc;
     
+    this.onRegisters = [];
     this.onRegistereds = [];
     this.onBroadcasts = [];
     this.onUnicasts = [];
     this.currentOn = null;
 
-    this.proc.on("message", (msg)=>{
-      this.emit(msg.type, new Msg(this.proc, msg));
+    this,proc.on("message", (msg)=>{
+      //msg.fromProcessId = proc.pid;
+      emitter.emit(msg.type, new Msg(this.proc, msg));
     });
 
+    this.on("register", (msg)=>{
+      this.onRegisters.forEach((then)=>{
+        if (then instanceof Function) then(msg.data, msg);
+      });
+    });
     
-    this.on("registered", ()=>{
+    this.on("registered", (msg)=>{
       this.onRegistereds.forEach((then)=>{
-        if (then instanceof Function) then();
+        if (then instanceof Function) then(msg.data, msg);
       });
     });
 
@@ -253,6 +260,11 @@ class ForkMsg extends EventEmitter {
     return this;
   }
 
+  onRegister(then) {
+    this.onRegisters.push(then);
+    return this;
+  }
+
   onRegistered(then) {
     this.onRegistereds.push(then);
     return this;
@@ -309,7 +321,7 @@ class ForkMsg extends EventEmitter {
 module.exports = function(proc) {
 
   registry.register(proc);
-  proc.on("exit", ()=>{
+  proc.on("exit", function() {
     registry.unregister(proc);
   });
 
